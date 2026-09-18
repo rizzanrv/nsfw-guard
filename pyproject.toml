@@ -37,9 +37,9 @@ train = ["ultralytics>=8.0"]
 nsfw-guard = "nsfw_guard.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/rizanrv/nsfw-guard"
-Source = "https://github.com/rizanrv/nsfw-guard"
-Issues = "https://github.com/rizanrv/nsfw-guard/issues"
+Homepage = "https://github.com/rizzanrv/nsfw-guard"
+Source = "https://github.com/rizzanrv/nsfw-guard"
+Issues = "https://github.com/rizzanrv/nsfw-guard/issues"
 
 [tool.setuptools]
 packages = ["nsfw_guard"]

@@ -1,6 +1,6 @@
 # nsfw-guard
 
-[![ci](https://github.com/rizanrv/nsfw-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/rizanrv/nsfw-guard/actions/workflows/ci.yml)
+[![ci](https://github.com/rizzanrv/nsfw-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/rizzanrv/nsfw-guard/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.9%2B-0a84ff)
 ![platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20macos-111)
 ![license](https://img.shields.io/badge/license-MIT-30d158)
@@ -48,7 +48,7 @@ Local data directory (logs, optional flagged frames, curtain patches):
 ## Install
 
 ```bash
-git clone https://github.com/rizanrv/nsfw-guard.git
+git clone https://github.com/rizzanrv/nsfw-guard.git
 cd nsfw-guard
 python -m pip install -r requirements.txt      # or: python -m pip install -e .
 ```
