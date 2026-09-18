@@ -22,8 +22,8 @@ Ready-made Windows builds live in
 
 | Artifact | Size | Notes |
 | --- | --- | --- |
-| `nsfw-guard-<version>-win64.zip` | ~98 MB | unpack anywhere, run `nsfw-guard.exe`. Starts instantly. **Recommended.** |
-| `nsfw-guard-<version>-portable.exe` | ~110 MB | single file, unpacks itself to `%TEMP%` on every start |
+| `nsfw-guard-<version>-win64.zip` | ~98 MB | unpack anywhere, run `nsfw-guard.exe`; the window opens in about 2 s |
+| `nsfw-guard-<version>-portable.exe` | ~98 MB | single file, unpacks itself to `%TEMP%` on every start (about 5 s) |
 
 Windows may show a SmartScreen warning ("unknown publisher") because the binaries are
 unsigned: *More info → Run anyway*. `SHA256SUMS.txt` in the same release lets you verify
