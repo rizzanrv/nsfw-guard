@@ -19,7 +19,7 @@ if ROOT not in sys.path:
 
 import webview  # noqa: E402
 
-from nsfw_guard.core import Engine, Settings  # noqa: E402
+from nsfw_guard.core import VERSION, Engine, Settings  # noqa: E402
 from nsfw_guard.server import WEBUI, Api  # noqa: E402
 
 SHOT = os.path.join(ROOT, "ui_smoke.png")
@@ -68,7 +68,6 @@ def probe(window):
                        ".then(s => { window.__action = s; }); 1")
     time.sleep(4)
     checks = {
-        "model_stat": "document.getElementById('stat-model').textContent",
         "frames": "document.getElementById('stat-frames').textContent",
         "monitor_options": "document.getElementById('monitor-select').options.length",
         "class_chips": "document.getElementById('class-chips').childElementCount",
@@ -77,6 +76,14 @@ def probe(window):
         "diag": "JSON.stringify(window.__nsfwGuard || null)",
         "bridge_version": "window.__probe ? window.__probe.version : 'NO_STATE'",
         "roundtrip_threshold": "window.__action ? window.__action.threshold : 'NO_ACTION'",
+        "views": "document.querySelectorAll('.view').length",
+        "active_view": "document.querySelector('.view.is-active').dataset.view",
+        "tray_field": "String(window.__probe.tray)",
+        "autostart_field": "String(window.__probe.autostart)",
+        "icons": "document.querySelectorAll('svg.i use').length",
+        "nav_items": "document.querySelectorAll('.nav-item').length",
+        "tiles": "document.querySelectorAll('.tile').length",
+        "status_watch": "document.getElementById('status-watch').textContent",
     }
     for key, js in checks.items():
         try:
@@ -124,7 +131,9 @@ def main() -> int:
 
     for key in sorted(results):
         print("%-20s %s" % (key, results[key]))
-    ok = results.get("bridge_version") == "1.0.0" and results.get("roundtrip_threshold") == 0.55
+    ok = (results.get("bridge_version") == VERSION
+          and results.get("roundtrip_threshold") == 0.55
+          and results.get("tiles") == 4)
     print("smoke:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 

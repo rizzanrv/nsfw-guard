@@ -1,21 +1,39 @@
 # nsfw-guard
 
 [![ci](https://github.com/rizzanrv/nsfw-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/rizzanrv/nsfw-guard/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/rizzanrv/nsfw-guard?label=download)](https://github.com/rizzanrv/nsfw-guard/releases/latest)
 ![python](https://img.shields.io/badge/python-3.9%2B-0a84ff)
 ![platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20macos-111)
 ![license](https://img.shields.io/badge/license-MIT-30d158)
 
 On-device nudity detection for **screens**, **files** and the **clipboard**, with a
-dark desktop UI. The engine is NudeNet 320n on ONNX Runtime (CPU); the interface is
-a plain HTML/CSS/JS page rendered inside a WebView2 window, bridged to Python.
+tray icon so it can keep working in the background. The engine is NudeNet 320n on
+ONNX Runtime (CPU) and runs locally behind a WebView2 window.
 
 **Nothing leaves the machine.** No telemetry, no uploads, no update checks - the
 model ships inside the `nudenet` wheel and inference happens locally.
 
 ![nsfw-guard](docs/screenshot.png)
 
+## Download
+
+Ready-made Windows builds live in
+[Releases](https://github.com/rizzanrv/nsfw-guard/releases/latest) - no Python needed:
+
+| Artifact | Size | Notes |
+| --- | --- | --- |
+| `nsfw-guard-<version>-win64.zip` | ~98 MB | unpack anywhere, run `nsfw-guard.exe`. Starts instantly. **Recommended.** |
+| `nsfw-guard-<version>-portable.exe` | ~110 MB | single file, unpacks itself to `%TEMP%` on every start |
+
+Windows may show a SmartScreen warning ("unknown publisher") because the binaries are
+unsigned: *More info → Run anyway*. `SHA256SUMS.txt` in the same release lets you verify
+the download. The build is fully reproducible from this repository with
+`python tools/build_exe.py --both`.
+
 ## Highlights
 
+* **Tray and background mode** - closing the window hides it instead of quitting;
+  watch mode, the hotkey and notifications keep running from the notification area.
 * **Whole-screen analysis** with detection boxes drawn on the preview, plus watch
   mode with a configurable interval.
 * **Per-region curtain** - only the flagged regions are covered, with blurred copies
@@ -27,6 +45,8 @@ model ships inside the `nudenet` wheel and inference happens locally.
 * **Global hotkey** `Ctrl+Alt+S` - analyse the current screen from any window.
 * **Class-level control** - pick exactly which of the 18 model classes count as
   explicit, with presets (`EXPOSED`, defaults, all).
+* **Optional autostart** - one opt-in registry value starts the app hidden in the tray
+  at logon.
 * **CLI mode** for scripting and for machines without a desktop session.
 * **Event log** of metadata only (time, source, class, score, duration).
 
@@ -44,6 +64,10 @@ Local data directory (logs, optional flagged frames, curtain patches):
 * Windows: `%LOCALAPPDATA%\nsfw-guard`
 * Linux/macOS: `~/.local/share/nsfw-guard`
 * override with the `NSFW_GUARD_HOME` environment variable
+
+The only system-level change the app can make is the autostart value described under
+[Background mode](#background-mode-tray), and only when you switch it on; it is removed
+the moment you switch it off.
 
 ## Install
 
@@ -65,10 +89,37 @@ uses the system WebKit backend.
 python -m nsfw_guard        # after pip install -e . you can also run: nsfw-guard
 ```
 
-* hero buttons: **check the screen**, **open a file**, **from the clipboard**
-* watch switch with an interval stepper (1-120 s) and a monitor picker
-* class chips with presets, threshold slider, toggles for curtain / sound / saving
-* frame preview with boxes, detection list with score bars, event log and raw log
+The window has six screens, one per task:
+
+* **Overview** - frame counters, the last analysed frame with detection bars, recent
+  hits.
+* **Screen** - monitor picker, watch interval, manual check, watch switches.
+* **File** - drop zone, native file picker, clipboard and `Ctrl+V`.
+* **Classes** - the 18 chips (click to include or exclude), presets, threshold slider.
+* **Events** - hit history and the tail of `events.log`.
+* **Settings** - reaction to a hit, background mode, data folder, reset, quit.
+
+### Background mode (tray)
+
+`python -m nsfw_guard --tray` starts hidden, with only the notification-area icon.
+Closing the window with the X hides it instead of quitting, so watch mode, the global
+hotkey and notifications keep working; the status bar shows `трей: работает`.
+
+The icon changes colour with the state - grey idle, blue while watching, red right
+after a hit - and its tooltip carries live counters. Right-click menu:
+
+* show / hide the window (double-click works too)
+* check the screen now
+* screen watch on/off
+* hide-to-tray on close, notifications on hits
+* autostart at logon (writes a single `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
+  value, `--tray`, and removes it again when switched off)
+* open the data folder, jump to the settings screen, quit
+
+Use `--no-tray` if you prefer a plain window: no icon, and the X really quits.
+Startup lines, model loading and tray availability are appended to
+`%LOCALAPPDATA%\nsfw-guard\app.log` - handy for bug reports, especially for the
+packaged build that has no console.
 
 ### Global hotkey
 
@@ -94,7 +145,7 @@ nsfw_guard/
   server.py     desktop shell (pywebview window + JS bridge), no local HTTP server
   curtain.py    short-lived process drawing blurred patches over flagged boxes
   cli.py        terminal interface
-  webui/        index.html + styles.css + app.js (no frameworks, no CDN)
+  webui/        index.html + styles.css + app.js
 tools/
   synth_dataset.py   synthetic YOLO dataset of hard negatives
   evaluate.py        per-class and per-brightness precision/recall report
@@ -182,13 +233,18 @@ legally allowed to use - and keep it out of this repository.
 ## Development
 
 ```bash
-python -m unittest discover -s tests -v     # headless tests with real inference
+python -m unittest discover -s tests -v     # headless tests, real inference on synthetic frames
 python tests/ui_smoke.py                    # opens the UI, checks the bridge, screenshots it
+python tools/make_icons.py --preview        # redraw nsfw_guard/assets/* (Pillow only)
+python tools/build_exe.py --both            # dist/: folder zip + single-file exe (PyInstaller)
 ```
 
 `tests/ui_smoke.py` reads back what the page actually sees (`window.__nsfwGuard`), so
-a broken bridge cannot pass silently. CI runs the headless suite on Windows for
-Python 3.10 and 3.12 and builds the package.
+a broken bridge cannot pass silently. The headless suite covers the tray menu and
+`server.Shell` through small fakes, which is how the background mode is tested without
+a desktop. CI runs the suite on Windows for Python 3.10 and 3.12, builds the package,
+and the `release` workflow builds both executables and attaches them to the release
+when a `v*` tag is pushed.
 
 ## License
 
@@ -201,15 +257,23 @@ check that project's license before redistributing the model itself.
 ## Русский
 
 **nsfw-guard** - локальный детектор откровенного контента для экрана, файлов и буфера
-обмена. Модель NudeNet 320n считает на CPU, интерфейс - тёмное окно в стиле apple.com
-(HTML/CSS/JS внутри WebView2, без фреймворков и CDN).
+обмена. Модель NudeNet 320n считает на CPU, значок в трее.
 
+* **Готовый exe** - в разделе [Releases](https://github.com/rizzanrv/nsfw-guard/releases/latest):
+  `…-win64.zip` (папка, запускается мгновенно) и `…-portable.exe` (один файл).
+  Python для них не нужен.
 * `python -m nsfw_guard` - графический интерфейс, `python -m nsfw_guard --cli --help` - терминал.
+* **Фоновый режим**: крестик сворачивает окно в трей, слежение, горячая клавиша и
+  уведомления продолжают работать. `--tray` - старт сразу в трее, `--no-tray` - выключить трей.
+* Меню значка: показать/скрыть окно, проверить экран, слежение, сворачивать при закрытии,
+  уведомления о находках, автозапуск при входе в Windows, папка данных, выход.
 * Горячая клавиша `Ctrl+Alt+S` проверяет текущий экран из любого окна.
 * Тёмные кадры: мульти-экспозиция (гамма 1.0 / 1.8 / 3.2 и слияние по IoU).
 * «Шторка» размывает **только** найденные области и закрывается сама.
-* Сети нет: модель внутри пакета `nudenet`, логи и данные - локально
-  (`%LOCALAPPDATA%\nsfw-guard`), кадры пишутся только при включённом переключателе.
+* Сети нет: модель внутри пакета `nudenet`, данные - локально
+  (`%LOCALAPPDATA%\nsfw-guard`, журнал `app.log`), кадры пишутся только при включённом
+  переключателе. Единственная системная правка - запись автозапуска, и только по вашему
+  включению.
 * Проект **не генерирует** и не собирает откровенный контент: инструменты в `tools/`
   делают «сложные негативы», чтобы убирать ложные срабатывания.
 

@@ -13,6 +13,9 @@ flagged/
 curtain/
 ui_smoke.png
 
+# icon sheet drawn by tools/make_icons.py --preview
+nsfw_guard/assets/preview.png
+
 # generated datasets and reports
 dataset/
 dataset_*/

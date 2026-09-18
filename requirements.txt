@@ -6,3 +6,4 @@ opencv-python>=4.8
 Pillow>=10.0
 mss>=9.0                # screen capture
 pywebview>=5.0          # desktop shell (WebView2 on Windows, WebKit/GTK elsewhere)
+pystray>=0.19           # notification-area icon and its menu (background mode)

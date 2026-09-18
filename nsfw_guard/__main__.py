@@ -11,6 +11,10 @@ import sys
 
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    if "--curtain" in argv:
+        argv.remove("--curtain")
+        from .curtain import main as curtain_main
+        return curtain_main(argv)
     if "--cli" in argv:
         argv.remove("--cli")
         from .cli import main as cli_main

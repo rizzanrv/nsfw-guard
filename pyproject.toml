@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nsfw-guard"
-version = "1.0.0"
+version = "1.1.0"
 description = "Offline on-device nudity detection for screens, files and the clipboard"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -28,6 +28,7 @@ dependencies = [
   "Pillow>=10.0",
   "mss>=9.0",
   "pywebview>=5.0",
+  "pystray>=0.19",
 ]
 
 [project.optional-dependencies]
@@ -45,4 +46,4 @@ Issues = "https://github.com/rizzanrv/nsfw-guard/issues"
 packages = ["nsfw_guard"]
 
 [tool.setuptools.package-data]
-nsfw_guard = ["webui/*.html", "webui/*.css", "webui/*.js"]
+nsfw_guard = ["webui/*.html", "webui/*.css", "webui/*.js", "assets/*.ico", "assets/*.png"]

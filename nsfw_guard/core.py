@@ -29,7 +29,7 @@ except ImportError:  # pragma: no cover - non-Windows
     ctypes = None
 
 APP_NAME = "nsfw-guard"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 # --------------------------------------------------------------------------------------
 # paths
@@ -57,6 +57,36 @@ def flagged_dir() -> str:
     path = os.path.join(data_dir(), "flagged")
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def settings_path() -> str:
+    return os.path.join(data_dir(), "settings.json")
+
+
+def app_log_path() -> str:
+    return os.path.join(data_dir(), "app.log")
+
+
+def log_line(message: str, limit: int = 400) -> None:
+    """Append one diagnostic line to app.log (best effort, never raises).
+
+    Handy when the packaged build runs without a console: the file shows what
+    started, whether the model loaded and why the tray stayed away.
+    """
+    try:
+        path = app_log_path()
+        try:
+            if os.path.getsize(path) > 512 * 1024:
+                with open(path, "r", encoding="utf-8", errors="replace") as handle:
+                    tail = handle.read().splitlines()[-limit:]
+                with open(path, "w", encoding="utf-8") as handle:
+                    handle.write("\n".join(tail) + "\n")
+        except OSError:
+            pass
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), message))
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------------------
@@ -295,6 +325,8 @@ class Settings:
         "sound": True,
         "save": False,
         "log_all": False,
+        "tray_close": True,     # closing the window hides it into the tray
+        "notify": True,         # balloon notification when a hit happens while hidden
         "explicit": list(DEFAULT_EXPLICIT),
     }
 
@@ -323,6 +355,28 @@ class Settings:
 
     def to_dict(self) -> dict:
         return dict(self._data)
+
+    # ------------------------------------------------------------ persistence
+    def save(self, path: str = None) -> bool:
+        """Write the settings next to the log, so tray/UI choices survive a restart."""
+        try:
+            with open(path or settings_path(), "w", encoding="utf-8") as handle:
+                json.dump(self.to_dict(), handle, ensure_ascii=False, indent=2)
+            return True
+        except Exception:
+            return False
+
+    @classmethod
+    def load(cls, path: str = None) -> "Settings":
+        """Settings from disk; a missing or broken file silently means defaults."""
+        try:
+            with open(path or settings_path(), "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            if not isinstance(data, dict):
+                data = {}
+        except Exception:
+            data = {}
+        return cls(**data)
 
 CURTAIN_KEY = "#ff00fe"   # chroma key: those pixels are transparent and click-through
 
@@ -399,6 +453,8 @@ class Engine:
         self._hotkey_thread = None
         self._hotkey_latch = False
         self._curtain = None
+        #: callbacks fired for every hit - (result, source); the tray subscribes here
+        self.alert_hooks = []
 
     # ------------------------------------------------------------------ model
     def load_model(self):
@@ -408,8 +464,10 @@ class Engine:
             with self.lock:
                 self.detector = detector
                 self.error = None
+            log_line("model ready (nudenet 320n, threshold %.2f)" % float(self.settings.get("threshold")))
         except Exception as exc:
             self.error = "%s: %s" % (type(exc).__name__, exc)
+            log_line("model failed: %s" % self.error)
         return self.detector
 
     def ready(self) -> bool:
@@ -527,6 +585,11 @@ class Engine:
                 log_event(source, result, "saved=" + os.path.basename(path))
         if self.settings.get("curtain"):
             self.show_curtain(image, result.get("flagged") or [])
+        for hook in list(self.alert_hooks):
+            try:
+                hook(result, source)
+            except Exception:
+                pass
 
     def show_curtain(self, image, detections) -> bool:
         """Spawn the native click-through curtain process (blurred patches only)."""
@@ -540,8 +603,12 @@ class Engine:
                 size = "%dx%d" % (width, height)
             except Exception:
                 size = ""
-            args = [sys.executable, "-m", "nsfw_guard.curtain",
-                    "--seconds", str(self.settings.get("curtain_seconds", 4))]
+            args = ["--seconds", str(self.settings.get("curtain_seconds", 4))]
+            if getattr(sys, "frozen", False):
+                # packaged build: the executable re-enters through --curtain
+                args = [sys.executable, "--curtain"] + args
+            else:
+                args = [sys.executable, "-m", "nsfw_guard.curtain"] + args
             if size:
                 args += ["--src", size]
             for patch in patches:
@@ -647,6 +714,7 @@ class Engine:
     def shutdown(self):
         self.stop_watch()
         self._hotkey_stop.set()
+        log_line("engine stopped (frames=%d hits=%d)" % (self.frames, self.hits))
         if self._curtain is not None and self._curtain.poll() is None:
             try:
                 self._curtain.terminate()

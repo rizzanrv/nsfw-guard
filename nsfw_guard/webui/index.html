@@ -5,195 +5,330 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; img-src data: 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self';">
-<title>nsfw guard — локальный детектор</title>
+<title>nsfw guard</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<header class="nav">
-  <div class="nav-inner">
-    <a class="brand" href="#top">
-      <span class="brand-mark" aria-hidden="true"></span>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-shield" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M8 1.5 13.6 3.5v3.9c0 3.4-2.3 6-5.6 7-3.3-1-5.6-3.6-5.6-7V3.5zm0 4.1a1.7 1.9 0 1 0 0 3.8 1.7 1.9 0 1 0 0-3.8z"/>
+  </symbol>
+  <symbol id="i-gauge" viewBox="0 0 16 16"><path d="M2.7 12.6a6.7 6.7 0 1 1 10.6 0"/><path d="M8 9.7 10.9 7"/><circle cx="8" cy="9.7" r="1.2"/></symbol>
+  <symbol id="i-screen" viewBox="0 0 16 16"><rect x="1.8" y="3" width="12.4" height="8.3" rx="1.4"/><path d="M6.1 13.7h3.8"/><path d="M8 11.3v2.4"/></symbol>
+  <symbol id="i-file" viewBox="0 0 16 16"><path d="M4 1.9h5l3 3v9.2H4z"/><path d="M9 1.9v3h3"/><path d="M6 9.2h4M6 11.4h2.6"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 16 16"><path d="M3 5.3h10M3 10.7h10"/><circle cx="6.3" cy="5.3" r="1.6"/><circle cx="9.9" cy="10.7" r="1.6"/></symbol>
+  <symbol id="i-events" viewBox="0 0 16 16"><path d="M5.8 4.4h7.4M5.8 8h7.4M5.8 11.6h7.4"/><circle cx="3.2" cy="4.4" r=".9"/><circle cx="3.2" cy="8" r=".9"/><circle cx="3.2" cy="11.6" r=".9"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.1"/><path d="M8 1.9v1.6M8 12.5v1.6M14.1 8h-1.6M3.5 8H1.9M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1M12.3 12.3l-1.1-1.1M4.8 4.8 3.7 3.7"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1.9 8s2.4-4.1 6.1-4.1S14.1 8 14.1 8s-2.4 4.1-6.1 4.1S1.9 8 1.9 8z"/><circle cx="8" cy="8" r="1.7"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 16 16"><rect x="3.6" y="3" width="8.8" height="11" rx="1.4"/><path d="M6.2 3v-.8h3.6V3"/><path d="M6.3 7.3h3.4M6.3 9.9h3.4"/></symbol>
+  <symbol id="i-tray" viewBox="0 0 16 16"><path d="M8 2.3v6.2"/><path d="M5.6 6.3 8 8.7l2.4-2.4"/><path d="M2.6 10.2v1.9a1.4 1.4 0 0 0 1.4 1.4h8a1.4 1.4 0 0 0 1.4-1.4v-1.9"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16"><path d="M2 4.7A1.5 1.5 0 0 1 3.5 3.2h2.3l1.5 1.7h4.7A1.5 1.5 0 0 1 13.5 6.4v5.1a1.5 1.5 0 0 1-1.5 1.5H3.5A1.5 1.5 0 0 1 2 11.5z"/></symbol>
+  <symbol id="i-power" viewBox="0 0 16 16"><path d="M8 2.6v5.1"/><path d="M4.5 4.9a5.2 5.2 0 1 0 7 0"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2.6 14 13.1H2z"/><path d="M8 6.7v3.1M8 11.5h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3.4 8.4 6.4 11.4 12.6 5.1"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 16 16"><path d="M8 11.4V3.4"/><path d="M4.9 6.5 8 3.4l3.1 3.1"/><path d="M2.8 11.2v1.6a1.4 1.4 0 0 0 1.4 1.4h7.6a1.4 1.4 0 0 0 1.4-1.4v-1.6"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 16 16"><path d="M3.6 6.1h2.2L9 3.4v9.2L5.8 9.9H3.6z"/><path d="M11.4 6.3 13.9 8.8M13.9 6.3l-2.5 2.5"/></symbol>
+</svg>
+
+<div class="app">
+
+  <aside class="side">
+    <div class="brand">
+      <svg class="brand-mark i"><use href="#i-shield"/></svg>
       <span class="brand-name">nsfw guard</span>
-    </a>
-    <nav class="nav-links">
-      <a href="#overview">Обзор</a>
-      <a href="#screen">Экран</a>
-      <a href="#file">Файл</a>
-      <a href="#events">События</a>
-      <a href="#settings">Настройки</a>
+      <span class="brand-ver" id="version">—</span>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item" data-view="overview"><svg class="i"><use href="#i-gauge"/></svg><span>Обзор</span></button>
+      <button class="nav-item" data-view="screen"><svg class="i"><use href="#i-screen"/></svg><span>Экран</span></button>
+      <button class="nav-item" data-view="file"><svg class="i"><use href="#i-file"/></svg><span>Файл</span></button>
+      <button class="nav-item" data-view="classes"><svg class="i"><use href="#i-sliders"/></svg><span>Классы</span></button>
+      <button class="nav-item" data-view="events"><svg class="i"><use href="#i-events"/></svg><span>События</span></button>
+      <button class="nav-item" data-view="settings"><svg class="i"><use href="#i-gear"/></svg><span>Настройки</span></button>
     </nav>
-    <div class="nav-actions">
-      <span class="pill pill-privacy" title="Модель и данные не покидают этот компьютер">
-        <span class="dot dot-green"></span> 100% локально
-      </span>
+
+    <div class="side-foot">
+      <button class="btn btn-primary btn-block" id="quick-check">
+        <svg class="i"><use href="#i-eye"/></svg><span>Проверить экран</span>
+      </button>
+      <label class="switch-row" title="Проверять экран автоматически каждые N секунд">
+        <svg class="i"><use href="#i-screen"/></svg><span class="switch-row-label">Слежение</span>
+        <input type="checkbox" id="watch-top"><span class="switch-track"><span class="switch-thumb"></span></span>
+      </label>
+      <button class="btn btn-quiet btn-block" id="btn-hide">
+        <svg class="i"><use href="#i-tray"/></svg><span>Свернуть в трей</span>
+      </button>
+      <p class="side-note">Горячая клавиша <kbd id="hotkey">Ctrl+Alt+S</kbd></p>
     </div>
-  </div>
-</header>
+  </aside>
 
-<main id="top">
-
-  <section class="hero" id="overview">
-    <p class="eyebrow">On-device detection</p>
-    <h1>Находит откровенный контент.<br><span class="grad">Молчит и никому не рассказывает.</span></h1>
-    <p class="lede">
-      Анализ экрана, файла или буфера обмена на вашем железе: модель NudeNet&nbsp;320n работает
-      на CPU, ни один кадр не покидает устройство. Мульти-экспозиция подстраховывает тёмные кадры,
-      «шторка» размывает только найденные области.
-    </p>
-    <div class="hero-actions">
-      <button class="btn btn-primary" id="btn-check">Проверить экран сейчас</button>
-      <button class="btn btn-ghost" id="btn-file">Открыть файл…</button>
-      <button class="btn btn-quiet" id="btn-clipboard">Из буфера</button>
-    </div>
-    <p class="hint">Горячая клавиша из любого окна: <kbd id="hotkey">Ctrl+Alt+S</kbd></p>
-
-    <div class="stats">
-      <div class="stat"><span class="stat-label">Модель</span><span class="stat-value" id="stat-model">загрузка…</span></div>
-      <div class="stat"><span class="stat-label">Кадров</span><span class="stat-value" id="stat-frames">0</span></div>
-      <div class="stat"><span class="stat-label">Срабатываний</span><span class="stat-value" id="stat-hits">0</span></div>
-      <div class="stat"><span class="stat-label">Кадр</span><span class="stat-value" id="stat-ms">—</span></div>
-      <div class="stat"><span class="stat-label">Слежение</span><span class="stat-value" id="stat-watch">выкл</span></div>
-    </div>
-  </section>
-
-  <section class="section" id="screen">
-    <div class="section-head">
-      <h2>Экран</h2>
-      <p class="section-sub">Живой кадр, рамки и оценки по классам. Обновляется по нажатию или в режиме слежения.</p>
-    </div>
-
-    <div class="grid">
-      <div class="card card-preview">
-        <div class="card-head">
-          <span class="card-title">Кадр</span>
-          <span class="pill" id="preview-source">нет данных</span>
-        </div>
-        <div class="preview" id="preview">
-          <div class="skeleton" id="preview-empty">Нажмите «Проверить экран сейчас» или перетащите картинку сюда</div>
-          <img id="preview-img" alt="последний проанализированный кадр" hidden>
-        </div>
-        <div class="verdict">
-          <span class="pill pill-idle" id="verdict-pill">ожидание</span>
-          <span class="verdict-text" id="verdict-text">Анализ ещё не запускался</span>
-        </div>
+  <main class="content">
+    <header class="topbar">
+      <div class="topbar-text">
+        <h1 id="view-title">Обзор</h1>
+        <p id="view-sub">Состояние движка, последний кадр и быстрые действия.</p>
       </div>
+    </header>
 
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">Детекции</span>
-          <span class="pill" id="det-count">0</span>
+    <div class="views" id="views">
+
+      <section class="view" data-view="overview">
+        <div class="tiles">
+          <div class="tile"><span class="tile-label">Кадров</span><span class="tile-value num" id="stat-frames">0</span></div>
+          <div class="tile"><span class="tile-label">Срабатываний</span><span class="tile-value num" id="stat-hits">0</span></div>
+          <div class="tile"><span class="tile-label">Время кадра</span><span class="tile-value num" id="stat-ms">—</span></div>
+          <div class="tile"><span class="tile-label">Слежение</span><span class="tile-value" id="stat-watch">выкл</span></div>
         </div>
-        <div class="det-list" id="det-list"><p class="muted">Пока пусто.</p></div>
 
-        <div class="watch-row">
-          <label class="switch">
-            <input type="checkbox" id="watch-toggle">
-            <span class="switch-track"><span class="switch-thumb"></span></span>
-            <span class="switch-label">Следить за экраном</span>
-          </label>
-          <div class="stepper">
-            <button class="step-btn" id="interval-minus" aria-label="минус">−</button>
-            <span class="step-value" id="interval-value">3 с</span>
-            <button class="step-btn" id="interval-plus" aria-label="плюс">+</button>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Последний результат</span>
+            <span class="chip" id="last-source">нет данных</span>
+          </div>
+          <div class="panel-body panel-split">
+            <div class="preview" id="preview">
+              <p class="empty" id="preview-empty">Кадр появится после первой проверки</p>
+              <img id="preview-img" alt="проанализированный кадр" hidden>
+            </div>
+            <div class="verdict">
+              <span class="chip chip-idle" id="verdict-pill">ожидание</span>
+              <p class="verdict-text" id="verdict-text">Анализ ещё не запускался</p>
+              <div class="dets" id="dets-overview"><p class="empty">Детекций нет.</p></div>
+            </div>
           </div>
         </div>
 
-        <div class="field">
-          <span class="field-label">Экран</span>
-          <select class="select" id="monitor-select"></select>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Недавние срабатывания</span>
+            <button class="btn btn-link" data-goto="events">Все события</button>
+          </div>
+          <div class="panel-body"><div class="events-mini" id="events-mini"><p class="empty">Пока ничего не найдено.</p></div></div>
         </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <section class="section" id="file">
-    <div class="section-head">
-      <h2>Файл</h2>
-      <p class="section-sub">Перетащите изображение в окно, вставьте из буфера (Ctrl+V) или выберите файл.</p>
-    </div>
-    <div class="drop" id="drop">
-      <span class="drop-icon" aria-hidden="true"></span>
-      <p class="drop-title">Перетащите файл сюда</p>
-      <p class="drop-sub">jpg, png, bmp, webp, gif — обрабатывается локально</p>
-      <button class="btn btn-ghost" id="btn-file-2">Выбрать файл…</button>
-    </div>
-  </section>
+      <section class="view" data-view="screen">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Кадр с экрана</span>
+            <div class="panel-tools">
+              <select class="select" id="monitor-select"></select>
+              <select class="select" id="interval-select">
+                <option value="1">каждую секунду</option>
+                <option value="2">каждые 2 с</option>
+                <option value="3">каждые 3 с</option>
+                <option value="5">каждые 5 с</option>
+                <option value="10">каждые 10 с</option>
+                <option value="30">каждые 30 с</option>
+              </select>
+              <button class="btn btn-quiet" id="btn-check-now"><svg class="i"><use href="#i-eye"/></svg><span>Проверить</span></button>
+            </div>
+          </div>
+          <div class="panel-body panel-split">
+            <div class="preview preview-tall">
+              <img id="preview-img-screen" alt="кадр с экрана" hidden>
+              <p class="empty" id="preview-empty-screen">Ещё не проверялось</p>
+            </div>
+            <div class="verdict">
+              <span class="chip chip-idle" id="verdict-pill-screen">ожидание</span>
+              <p class="verdict-text" id="verdict-text-screen">—</p>
+              <div class="dets" id="dets-screen"><p class="empty">Детекций нет.</p></div>
+            </div>
+          </div>
+        </div>
 
-  <section class="section" id="classes">
-    <div class="section-head">
-      <h2>Классы</h2>
-      <p class="section-sub">Что считать откровенным контентом. По умолчанию — только явное обнажение.</p>
-    </div>
-    <div class="chips" id="class-chips"></div>
-    <div class="hero-actions">
-      <button class="btn btn-quiet" id="preset-exposed">Только EXPOSED</button>
-      <button class="btn btn-quiet" id="preset-default">По умолчанию</button>
-      <button class="btn btn-quiet" id="preset-all">Все классы</button>
-    </div>
-  </section>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Режим слежения</span></div>
+          <div class="panel-body rows">
+            <div class="row">
+              <div class="row-text"><span class="row-label">Проверять экран постоянно</span>
+                <span class="row-hint">Работает и когда окно свёрнуто в трей.</span></div>
+              <label class="switch"><input type="checkbox" id="watch-toggle"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Мульти-экспозиция</span>
+                <span class="row-hint">Три прохода по яркости — тёмные кадры не проскакивают.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-multi"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Шторка на найденных областях</span>
+                <span class="row-hint">Размывает только сами области и закрывается сама.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-curtain"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+          </div>
+        </div>
+      </section>
 
-  <section class="section" id="settings">
-    <div class="section-head">
-      <h2>Настройки</h2>
-      <p class="section-sub">Порог, поведение при срабатывании и данные.</p>
-    </div>
+      <section class="view" data-view="file">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Изображение</span>
+            <div class="panel-tools">
+              <button class="btn btn-quiet" id="btn-file"><svg class="i"><use href="#i-folder"/></svg><span>Открыть файл…</span></button>
+              <button class="btn btn-quiet" id="btn-clipboard"><svg class="i"><use href="#i-clipboard"/></svg><span>Из буфера</span></button>
+            </div>
+          </div>
+          <div class="panel-body panel-split">
+            <div class="drop" id="drop">
+              <svg class="i drop-icon"><use href="#i-upload"/></svg>
+              <p class="drop-title">Перетащите картинку сюда</p>
+              <p class="drop-hint">или нажмите Ctrl+V — файл обрабатывается локально</p>
+            </div>
+            <div class="verdict">
+              <span class="chip chip-idle" id="verdict-pill-file">ожидание</span>
+              <p class="verdict-text" id="verdict-text-file">Файл ещё не проверялся</p>
+              <div class="preview preview-tall" id="file-preview-box" hidden>
+                <img id="preview-img-file" alt="проверенный файл" hidden>
+              </div>
+              <div class="dets" id="dets-file"><p class="empty">Детекций нет.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <div class="card">
-      <div class="field field-range">
-        <span class="field-label">Порог срабатывания</span>
-        <input type="range" id="threshold" min="0.05" max="0.95" step="0.05" value="0.35">
-        <span class="field-value" id="threshold-value">0.35</span>
-      </div>
+      <section class="view" data-view="classes">
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Что считается откровенным</span>
+            <div class="panel-tools">
+              <button class="btn btn-quiet" id="preset-exposed">Только EXPOSED</button>
+              <button class="btn btn-quiet" id="preset-default">По умолчанию</button>
+              <button class="btn btn-quiet" id="preset-all">Все классы</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <p class="panel-note">Нажатие на класс включает и выключает реакцию на него. Модель всегда оценивает все 18 классов — здесь выбирается, какие из них приводят к срабатыванию.</p>
+            <div class="chips" id="class-chips"></div>
+          </div>
+        </div>
 
-      <div class="toggles">
-        <label class="switch"><input type="checkbox" id="opt-multi"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Мульти-экспозиция (тёмные кадры)</span></label>
-        <label class="switch"><input type="checkbox" id="opt-curtain"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Шторка на найденных областях</span></label>
-        <label class="switch"><input type="checkbox" id="opt-sound"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Звук при срабатывании</span></label>
-        <label class="switch"><input type="checkbox" id="opt-save"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Сохранять кадр (папка flagged)</span></label>
-        <label class="switch"><input type="checkbox" id="opt-logall"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Логировать каждую проверку</span></label>
-      </div>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Порог срабатывания</span>
+            <span class="chip num" id="threshold-value">0.35</span>
+          </div>
+          <div class="panel-body">
+            <input type="range" id="threshold" min="0.05" max="0.95" step="0.05" value="0.35">
+            <p class="panel-note">Ниже порог — больше находок и больше ложных срабатываний. 0.35 — разумный компромисс, 0.5 — только уверенные детекции.</p>
+          </div>
+        </div>
+      </section>
 
-      <div class="data-row">
-        <span class="muted" id="data-dir">—</span>
-        <button class="btn btn-quiet" id="btn-open-dir">Открыть папку данных</button>
-      </div>
-    </div>
+      <section class="view" data-view="events">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Срабатывания</span></div>
+          <div class="panel-body"><div class="events-mini" id="event-list"><p class="empty">Пока ничего не найдено.</p></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Журнал</span>
+            <span class="chip num" id="log-path">events.log</span>
+          </div>
+          <div class="panel-body"><pre class="log" id="log">—</pre></div>
+        </div>
+      </section>
 
-    <div class="privacy-note">
-      <strong>Приватность.</strong> В коде нет сетевых вызовов: модель поставляется внутри пакета
-      <code>nudenet</code>, инференс идёт на CPU. Кадры не сохраняются, если не включён
-      соответствующий переключатель, а лог хранит только время, класс и оценку.
-    </div>
-  </section>
+      <section class="view" data-view="settings">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Реакция на находку</span></div>
+          <div class="panel-body rows">
+            <div class="row">
+              <div class="row-text"><span class="row-label">Звук</span>
+                <span class="row-hint">Короткий системный сигнал при срабатывании.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-sound"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Сохранять кадр</span>
+                <span class="row-hint">Кадр с находкой уходит в папку flagged. По умолчанию выключено.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-save"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Записывать каждую проверку</span>
+                <span class="row-hint">В журнал попадают и чистые кадры — удобно при настройке порога.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-logall"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Показывать шторку</span>
+                <span class="row-hint">Размывает найденные области поверх других окон.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-curtain-2"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+          </div>
+        </div>
 
-  <section class="section" id="events">
-    <div class="section-head">
-      <h2>События</h2>
-      <p class="section-sub">Последние срабатывания и хвост лога.</p>
-    </div>
-    <div class="grid">
-      <div class="card">
-        <div class="card-head"><span class="card-title">Срабатывания</span></div>
-        <div class="event-list" id="event-list"><p class="muted">Пока ничего не найдено.</p></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">Лог</span><span class="pill" id="log-path">events.log</span></div>
-        <pre class="log" id="log">—</pre>
-      </div>
-    </div>
-  </section>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">Фоновый режим</span>
+            <span class="chip" id="tray-state">трей: —</span>
+          </div>
+          <div class="panel-body rows">
+            <div class="row">
+              <div class="row-text"><span class="row-label">Сворачивать в трей при закрытии</span>
+                <span class="row-hint">Крестик прячет окно, а приложение продолжает следить за экраном. Полный выход — из меню значка.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-trayclose"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Уведомления о находках</span>
+                <span class="row-hint">Всплывающее уведомление, когда окно скрыто.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-notify"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Запускать при входе в Windows</span>
+                <span class="row-hint">Одна запись в HKCU\...\Run, старт сразу свёрнутым в трей.</span></div>
+              <label class="switch"><input type="checkbox" id="opt-autostart"><span class="switch-track"><span class="switch-thumb"></span></span></label>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Свернуть прямо сейчас</span>
+                <span class="row-hint">Значок останется в области уведомлений.</span></div>
+              <button class="btn btn-quiet" id="btn-hide-2"><svg class="i"><use href="#i-tray"/></svg><span>Свернуть</span></button>
+            </div>
+          </div>
+        </div>
 
-  <footer class="footer">
-    <div class="footer-inner">
-      <span>nsfw guard <span id="version">—</span></span>
-      <span class="dot-sep">·</span>
-      <span>offline by design</span>
-      <span class="dot-sep">·</span>
-      <span>используйте на своём экране или с согласия людей</span>
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">Данные</span></div>
+          <div class="panel-body rows">
+            <div class="row">
+              <div class="row-text"><span class="row-label">Папка данных</span>
+                <span class="row-hint num" id="data-dir">—</span></div>
+              <button class="btn btn-quiet" id="btn-open-dir"><svg class="i"><use href="#i-folder"/></svg><span>Открыть</span></button>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Настройки по умолчанию</span>
+                <span class="row-hint">Порог 0.35, только классы EXPOSED, мульти-экспозиция включена.</span></div>
+              <button class="btn btn-quiet" id="btn-reset">Сбросить</button>
+            </div>
+            <div class="row">
+              <div class="row-text"><span class="row-label">Выход</span>
+                <span class="row-hint">Останавливает слежение, убирает значок и закрывает процесс.</span></div>
+              <button class="btn btn-danger" id="btn-quit"><svg class="i"><use href="#i-power"/></svg><span>Выйти</span></button>
+            </div>
+          </div>
+          <div class="panel-foot">
+            Работает автономно: модель лежит внутри пакета <code>nudenet</code>, инференс идёт на CPU,
+            в коде нет ни одного сетевого вызова. Кадры сохраняются только при включённом переключателе выше.
+          </div>
+        </div>
+      </section>
+
     </div>
-  </footer>
-</main>
+  </main>
+</div>
+
+<footer class="statusbar">
+  <span class="status-item" id="status-watch">слежение выкл</span>
+  <span class="status-sep"></span>
+  <span class="status-item num" id="status-frames">0 кадров</span>
+  <span class="status-sep"></span>
+  <span class="status-item num" id="status-hits">0 находок</span>
+  <span class="status-grow"></span>
+  <span class="status-item" id="status-tray">трей: —</span>
+  <span class="status-sep"></span>
+  <span class="status-item">офлайн</span>
+  <span class="status-sep"></span>
+  <span class="status-item num" id="status-hotkey">Ctrl+Alt+S</span>
+</footer>
 
 <div class="toasts" id="toasts"></div>
 <script src="app.js"></script>
