@@ -1,0 +1,8 @@
+# nsfw-guard runtime dependencies (everything runs locally, no services needed)
+nudenet>=3.4.2          # detection model wrapper; the ONNX model ships inside the wheel
+onnxruntime>=1.17       # CPU inference
+numpy>=1.24
+opencv-python>=4.8
+Pillow>=10.0
+mss>=9.0                # screen capture
+pywebview>=5.0          # desktop shell (WebView2 on Windows, WebKit/GTK elsewhere)

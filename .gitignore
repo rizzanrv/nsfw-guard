@@ -1,0 +1,30 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# runtime data produced by the app itself
+events.log
+flagged/
+curtain/
+ui_smoke.png
+
+# generated datasets and reports
+dataset/
+dataset_*/
+tools/dataset*/
+report*.json
+eval*.txt
+smoke.txt
+tests_out.txt
+
+# editors / os
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store

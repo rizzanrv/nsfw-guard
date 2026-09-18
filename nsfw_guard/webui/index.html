@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src data: 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self';">
+<title>nsfw guard — локальный детектор</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">nsfw guard</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#overview">Обзор</a>
+      <a href="#screen">Экран</a>
+      <a href="#file">Файл</a>
+      <a href="#events">События</a>
+      <a href="#settings">Настройки</a>
+    </nav>
+    <div class="nav-actions">
+      <span class="pill pill-privacy" title="Модель и данные не покидают этот компьютер">
+        <span class="dot dot-green"></span> 100% локально
+      </span>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero" id="overview">
+    <p class="eyebrow">On-device detection</p>
+    <h1>Находит откровенный контент.<br><span class="grad">Молчит и никому не рассказывает.</span></h1>
+    <p class="lede">
+      Анализ экрана, файла или буфера обмена на вашем железе: модель NudeNet&nbsp;320n работает
+      на CPU, ни один кадр не покидает устройство. Мульти-экспозиция подстраховывает тёмные кадры,
+      «шторка» размывает только найденные области.
+    </p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" id="btn-check">Проверить экран сейчас</button>
+      <button class="btn btn-ghost" id="btn-file">Открыть файл…</button>
+      <button class="btn btn-quiet" id="btn-clipboard">Из буфера</button>
+    </div>
+    <p class="hint">Горячая клавиша из любого окна: <kbd id="hotkey">Ctrl+Alt+S</kbd></p>
+
+    <div class="stats">
+      <div class="stat"><span class="stat-label">Модель</span><span class="stat-value" id="stat-model">загрузка…</span></div>
+      <div class="stat"><span class="stat-label">Кадров</span><span class="stat-value" id="stat-frames">0</span></div>
+      <div class="stat"><span class="stat-label">Срабатываний</span><span class="stat-value" id="stat-hits">0</span></div>
+      <div class="stat"><span class="stat-label">Кадр</span><span class="stat-value" id="stat-ms">—</span></div>
+      <div class="stat"><span class="stat-label">Слежение</span><span class="stat-value" id="stat-watch">выкл</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="screen">
+    <div class="section-head">
+      <h2>Экран</h2>
+      <p class="section-sub">Живой кадр, рамки и оценки по классам. Обновляется по нажатию или в режиме слежения.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card card-preview">
+        <div class="card-head">
+          <span class="card-title">Кадр</span>
+          <span class="pill" id="preview-source">нет данных</span>
+        </div>
+        <div class="preview" id="preview">
+          <div class="skeleton" id="preview-empty">Нажмите «Проверить экран сейчас» или перетащите картинку сюда</div>
+          <img id="preview-img" alt="последний проанализированный кадр" hidden>
+        </div>
+        <div class="verdict">
+          <span class="pill pill-idle" id="verdict-pill">ожидание</span>
+          <span class="verdict-text" id="verdict-text">Анализ ещё не запускался</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Детекции</span>
+          <span class="pill" id="det-count">0</span>
+        </div>
+        <div class="det-list" id="det-list"><p class="muted">Пока пусто.</p></div>
+
+        <div class="watch-row">
+          <label class="switch">
+            <input type="checkbox" id="watch-toggle">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+            <span class="switch-label">Следить за экраном</span>
+          </label>
+          <div class="stepper">
+            <button class="step-btn" id="interval-minus" aria-label="минус">−</button>
+            <span class="step-value" id="interval-value">3 с</span>
+            <button class="step-btn" id="interval-plus" aria-label="плюс">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Экран</span>
+          <select class="select" id="monitor-select"></select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="file">
+    <div class="section-head">
+      <h2>Файл</h2>
+      <p class="section-sub">Перетащите изображение в окно, вставьте из буфера (Ctrl+V) или выберите файл.</p>
+    </div>
+    <div class="drop" id="drop">
+      <span class="drop-icon" aria-hidden="true"></span>
+      <p class="drop-title">Перетащите файл сюда</p>
+      <p class="drop-sub">jpg, png, bmp, webp, gif — обрабатывается локально</p>
+      <button class="btn btn-ghost" id="btn-file-2">Выбрать файл…</button>
+    </div>
+  </section>
+
+  <section class="section" id="classes">
+    <div class="section-head">
+      <h2>Классы</h2>
+      <p class="section-sub">Что считать откровенным контентом. По умолчанию — только явное обнажение.</p>
+    </div>
+    <div class="chips" id="class-chips"></div>
+    <div class="hero-actions">
+      <button class="btn btn-quiet" id="preset-exposed">Только EXPOSED</button>
+      <button class="btn btn-quiet" id="preset-default">По умолчанию</button>
+      <button class="btn btn-quiet" id="preset-all">Все классы</button>
+    </div>
+  </section>
+
+  <section class="section" id="settings">
+    <div class="section-head">
+      <h2>Настройки</h2>
+      <p class="section-sub">Порог, поведение при срабатывании и данные.</p>
+    </div>
+
+    <div class="card">
+      <div class="field field-range">
+        <span class="field-label">Порог срабатывания</span>
+        <input type="range" id="threshold" min="0.05" max="0.95" step="0.05" value="0.35">
+        <span class="field-value" id="threshold-value">0.35</span>
+      </div>
+
+      <div class="toggles">
+        <label class="switch"><input type="checkbox" id="opt-multi"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Мульти-экспозиция (тёмные кадры)</span></label>
+        <label class="switch"><input type="checkbox" id="opt-curtain"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Шторка на найденных областях</span></label>
+        <label class="switch"><input type="checkbox" id="opt-sound"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Звук при срабатывании</span></label>
+        <label class="switch"><input type="checkbox" id="opt-save"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Сохранять кадр (папка flagged)</span></label>
+        <label class="switch"><input type="checkbox" id="opt-logall"><span class="switch-track"><span class="switch-thumb"></span></span><span class="switch-label">Логировать каждую проверку</span></label>
+      </div>
+
+      <div class="data-row">
+        <span class="muted" id="data-dir">—</span>
+        <button class="btn btn-quiet" id="btn-open-dir">Открыть папку данных</button>
+      </div>
+    </div>
+
+    <div class="privacy-note">
+      <strong>Приватность.</strong> В коде нет сетевых вызовов: модель поставляется внутри пакета
+      <code>nudenet</code>, инференс идёт на CPU. Кадры не сохраняются, если не включён
+      соответствующий переключатель, а лог хранит только время, класс и оценку.
+    </div>
+  </section>
+
+  <section class="section" id="events">
+    <div class="section-head">
+      <h2>События</h2>
+      <p class="section-sub">Последние срабатывания и хвост лога.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Срабатывания</span></div>
+        <div class="event-list" id="event-list"><p class="muted">Пока ничего не найдено.</p></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Лог</span><span class="pill" id="log-path">events.log</span></div>
+        <pre class="log" id="log">—</pre>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>nsfw guard <span id="version">—</span></span>
+      <span class="dot-sep">·</span>
+      <span>offline by design</span>
+      <span class="dot-sep">·</span>
+      <span>используйте на своём экране или с согласия людей</span>
+    </div>
+  </footer>
+</main>
+
+<div class="toasts" id="toasts"></div>
+<script src="app.js"></script>
+</body>
+</html>

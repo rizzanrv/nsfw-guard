@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nsfw-guard"
+version = "1.0.0"
+description = "Offline on-device nudity detection for screens, files and the clipboard"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "nsfw-guard contributors" }]
+keywords = ["nsfw", "nudity-detection", "privacy", "offline", "onnx", "webview"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Win32 (MS Windows)",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Security",
+]
+dependencies = [
+  "nudenet>=3.4.2",
+  "onnxruntime>=1.17",
+  "numpy>=1.24",
+  "opencv-python>=4.8",
+  "Pillow>=10.0",
+  "mss>=9.0",
+  "pywebview>=5.0",
+]
+
+[project.optional-dependencies]
+train = ["ultralytics>=8.0"]
+
+[project.scripts]
+nsfw-guard = "nsfw_guard.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/rizanrv/nsfw-guard"
+Source = "https://github.com/rizanrv/nsfw-guard"
+Issues = "https://github.com/rizanrv/nsfw-guard/issues"
+
+[tool.setuptools]
+packages = ["nsfw_guard"]
+
+[tool.setuptools.package-data]
+nsfw_guard = ["webui/*.html", "webui/*.css", "webui/*.js"]
